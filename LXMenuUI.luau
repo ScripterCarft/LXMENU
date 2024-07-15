@@ -4,9 +4,10 @@
 
 local UI = {}
 
--- // StarterGui.UniqueMenu_V-2 \\ --
-UI["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
+UI.init = function()
+UI["1"] = Instance.new("ScreenGui")
 UI["1"]["Name"] = [[UniqueMenu_V-2]]
+UI["1"]["DisplayOrder"] = 1
 UI["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
 
 -- // StarterGui.UniqueMenu_V-2.Frame \\ --
@@ -2733,5 +2734,8 @@ UI["164"] = Instance.new("UIGradient", UI["163"])
 UI["164"]["Rotation"] = 270
 UI["164"]["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0.000, 0),NumberSequenceKeypoint.new(0.625, 0.29),NumberSequenceKeypoint.new(1.000, 1)}
 UI["164"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(0, 0, 0)),ColorSequenceKeypoint.new(0.625, Color3.fromRGB(20, 20, 20)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(20, 20, 20))}
+
+return UI
+end
 
 return UI
