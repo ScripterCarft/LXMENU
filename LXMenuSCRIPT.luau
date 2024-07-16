@@ -422,6 +422,7 @@ end
 
 initUi()
 
+print("error")
 local toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
 
 
