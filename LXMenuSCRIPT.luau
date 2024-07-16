@@ -26,6 +26,9 @@ local flying = false
 local Weld
 local torso
 
+local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+print("error")
+
 local ghostCharacter
 
 local DefaultKeys = {
@@ -532,8 +535,6 @@ function healPlayer()
 	character.Humanoid.Health = character.Humanoid.MaxHealth
 end
 
-task.wait(1)
-local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
 local isNoClip = false
 
 local function createGhostCharacter()
