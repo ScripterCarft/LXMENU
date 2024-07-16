@@ -1,8 +1,6 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 UI.init()
 
-
---dragger
 local dragger
 local parent
 local dragging
@@ -10,14 +8,11 @@ local dragStart
 local userInputService = game:GetService("UserInputService")
 local startPos
 
---player
 local runService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 local humanoid
-
 local character
 
---flight
 local cam = game.Workspace.CurrentCamera
 local speed
 local keys = {a = false, d = false, w = false, s = false}
@@ -32,7 +27,6 @@ local DefaultKeys = {
 	["FlightKey"] = Enum.KeyCode.X,
 	["SafeTeleportKey"] = Enum.KeyCode.N,
 	["OpenMenuKey"] = Enum.KeyCode.K
-	
 }
 
 local MaxValues = {
@@ -49,14 +43,12 @@ local config = {
 }
 
 local Types
-
 local cooldown = false
-
 local Settings
 
 function addPlayer(plr)
 	local templ = UI["76"]:Clone()
-	templ.Parent = 	UI["70"]
+	templ.Parent = UI["70"]
 	templ.DisplayName.Text = plr.DisplayName
 	templ["Polygon 1"].PlayerName.Text = "@"..plr.Name
 	templ.Picture.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" ..plr.UserId.. "&width=180&height=180&format=png"
@@ -72,8 +64,8 @@ function addPlayer(plr)
 		if plr2 == plr then
 			connection:Disconnect()
 			templ:Destroy()
-			if selectedPlr  == plr2 then
-				UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .."156".. "&width=180&height=180&format=png"
+			if selectedPlr == plr2 then
+				UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=156&width=180&height=180&format=png"
 				UI["5d"].Text = "N/A"
 				UI["5e"].Text = "N/A"
 				selectedPlr = nil
@@ -91,12 +83,9 @@ function initUi()
 	humanoid:SetAttribute("FlightSpeed", 5)
 	speed = humanoid:GetAttribute("FlightSpeed")
 
-
 	dragger = UI["5"]
 	parent = dragger.Parent
 	
-	--DRAGGER
-
 	local function update(input)
 		local delta = input.Position - dragStart
 		parent.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
@@ -131,11 +120,7 @@ function initUi()
 			end
 		end
 	end)
-	
-	
-	--inits
-	
-	
+
 	Types = {
 		["KeyBinds"] = UI["119"]:Clone(),
 	}
@@ -209,16 +194,7 @@ function initUi()
 			}
 		}
 	}
-	
-	
-	local SettingTypes = {
-		["Switch"] = UI[""]
-	}
-	
-	
-	
-	
-	
+
 	for _, setting in pairs(Settings) do
 		local Template = setting.Type
 		Template.Container.TopBar.Title.Text = setting.Name
@@ -245,7 +221,6 @@ function initUi()
 		end
 	end
 
-
 	for _, settingSection in pairs(UI["114"]:GetChildren()) do
 		if settingSection:IsA("Frame") and settingSection.Name ~= "Z" then
 			settingSection.Container.TopBar.Drop.Rotation = 270
@@ -260,10 +235,7 @@ function initUi()
 			end)
 		end
 	end
-	
-	--BAR
-	
-	
+
 	local function updateCharacterMod(slider)
 		if game.Players.LocalPlayer.Character then
 			local character = game.Players.LocalPlayer.Character
@@ -279,8 +251,7 @@ function initUi()
 			end
 		end
 	end
-	
-	
+
 	local function setSlider(slider)
 		local current
 		if slider:FindFirstChildOfClass("NumberValue").Name ~= "FlightSpeed" then
@@ -294,14 +265,12 @@ function initUi()
 		updateCharacterMod(slider)
 	end
 
-
 	local function updateTextBoxVal(slider)
 		if slider.Parent.Parent:FindFirstChild("Frame TextButton"):FindFirstChild("x1i") then
-			slider.Parent.Parent["Frame TextButton"]["x1i"].Text =  math.round(MaxValues[slider:FindFirstChildOfClass("NumberValue").Name] * slider.Size.X.Scale)
+			slider.Parent.Parent["Frame TextButton"]["x1i"].Text = math.round(MaxValues[slider:FindFirstChildOfClass("NumberValue").Name] * slider.Size.X.Scale)
 		end
 	end
-	
-	
+
 	local function createDraggableSliderForEachFrame()
 		for _, slider in pairs(UI["1"]:GetDescendants()) do
 			if slider.Name == "Frame 1" and slider:IsA("Frame") then
@@ -346,8 +315,7 @@ function initUi()
 
 	createDraggableSliderForEachFrame()
 
-	
-	for _, value in pairs(UI["10"]:GetDescendants())  do
+	for _, value in pairs(UI["10"]:GetDescendants()) do
 		if value:IsA("NumberValue") then
 			if value.Name ~= "FlightSpeed" then
 				value.Value = humanoid[value.Name]
@@ -370,7 +338,7 @@ function initUi()
 			end)
 		end
 	end
-	
+
 	for _, btn in pairs(UI["3f"]:GetChildren()) do
 		if btn:IsA("TextButton") then
 			btn.MouseButton1Click:Connect(function()
@@ -392,15 +360,13 @@ function initUi()
 			end)
 		end
 	end
-	
-	
+
 	for _, plr in pairs(game.Players:GetChildren()) do
 		if plr ~= player then
 			addPlayer(plr)
 		end
 	end
-	
-	
+
 	for _, btn in pairs(UI["60"]:GetChildren()) do
 		if btn:IsA("TextButton") then
 			btn.MouseButton1Click:Connect(function()
@@ -414,8 +380,6 @@ function initUi()
 			end)
 		end
 	end
-
-	
 end
 print("LOADED1")
 
