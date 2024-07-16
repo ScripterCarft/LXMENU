@@ -381,6 +381,7 @@ function initUi()
 		end
 	end
 end
+
 print("LOADED1")
 
 initUi()
@@ -388,7 +389,6 @@ initUi()
 print("LOADED2")
 
 local toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
-
 
 UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
@@ -420,19 +420,25 @@ function addCore()
 	torso = workspace.Core
 end
 
-player.Character.Humanoid.Died:Connect(function()
-	flying = false
-	local is = false
-	while not is do
-		wait()
-		if player.Character.Humanoid.Health > 0 then
-			is = true
-			UI = UI.init()
-			initUi()
-			addCore()
-			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+
+	humanoid.Died:Connect(function()
+		flying = false
+		local is = false
+		while not is do
+			wait()
+			if humanoid.Health > 0 then
+				is = true
+				initUi()
+				addCore()
+				UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+			end
 		end
-	end
+	end)
+
+	addCore()
 end)
 
 addCore()
@@ -462,14 +468,12 @@ function start()
 		gyro.cframe = workspace.CurrentCamera.CoordinateFrame
 	until not flying
 	DisableNoClip()
-	UI["3f"]["1"]["Frame 3"].ImageColor3 = Color3.new(1,1,1)
+	UI["3f"]["1"]["Frame 3"].ImageColor3 = Color3.new(1, 1, 1)
 	if gyro then gyro:Destroy() end
 	if pos then pos:Destroy() end
 	flying = false
 	character.Humanoid.PlatformStand = false
 end
-
-
 
 function teleportToPlayer(player, player2)
 	if player2.Character.HumanoidRootPart then
@@ -494,7 +498,6 @@ function changeCameraSubject(SubjectCharacter)
 	end
 end
 
-
 function healPlayer()
 	character.Humanoid.Health = character.Humanoid.MaxHealth
 end
@@ -503,11 +506,9 @@ local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild(
 local isNoClip = false
 
 local function createGhostCharacter()
-	-- Erstelle ein neues Modell für den Klon
 	local clone = Instance.new("Model")
 	clone.Name = "ClonedCharacter"
 
-	-- Kopiere alle Teile und Komponenten des Charakters
 	for _, part in pairs(character:GetChildren()) do
 		if part:IsA("BasePart") or part:IsA("Accessory") or part:IsA("Humanoid") or part:IsA("Shirt") or part:IsA("Pants") then
 			local partClone = part:Clone()
@@ -515,7 +516,6 @@ local function createGhostCharacter()
 		end
 	end
 
-	-- Setze die Transparenz und Kollisionseigenschaften des Klons
 	for _, part in pairs(clone:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Transparency = 0.2
@@ -528,7 +528,6 @@ local function createGhostCharacter()
 		end
 	end
 
-	-- Setze die Position des Klons auf die Mitte des Workspaces
 	local offset = character.PrimaryPart.CFrame.LookVector * 3
 	local newCFrame = character.PrimaryPart.CFrame + offset
 	local primaryPart = clone:FindFirstChild("HumanoidRootPart") or clone:FindFirstChildWhichIsA("BasePart")
@@ -538,10 +537,8 @@ local function createGhostCharacter()
 		warn("Der Klon hat keinen HumanoidRootPart oder BasePart.")
 	end
 
-	-- Elternteil des Klons auf Workspace setzen
 	clone.Parent = workspace
 
-	-- Fixe mögliche Welds, Joints und Motor6Ds
 	for _, part in pairs(clone:GetDescendants()) do
 		if part:IsA("Weld") or part:IsA("JointInstance") or part:IsA("Motor6D") then
 			part:Destroy()
@@ -563,7 +560,6 @@ end
 controlModule:Enable()
 
 function toggleGhostCharacter()
-	print(ghostCharacter)
 	if ghostCharacter then
 		if player.Character.PrimaryPart then
 			player.Character:SetPrimaryPartCFrame(ghostCharacter.HumanoidRootPart.CFrame)
@@ -618,12 +614,12 @@ function toggleGhostCharacter()
 				humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
 		end
-		moveDirection = Vector3.new(moveDirection.X, 0, moveDirection.Z) -- Normalisiere die Richtung und ignoriere Y-Achse
+		moveDirection = Vector3.new(moveDirection.X, 0, moveDirection.Z)
 		if moveDirection.Magnitude > 0 then
-			moveDirection = moveDirection.Unit -- Normalisiere die Richtung
+			moveDirection = moveDirection.Unit
 			humanoid:Move(moveDirection, false)
 		else
-			humanoid:Move(Vector3.new(0, 0, 0), false) -- Stoppt die Bewegung
+			humanoid:Move(Vector3.new(0, 0, 0), false)
 		end
 	end
 
@@ -633,10 +629,8 @@ function toggleGhostCharacter()
 		end
 	end)
 
-	-- Verbindung zu RenderStep herstellen
 	runService.RenderStepped:Connect(onRenderStep)
 
-	-- Behandle das Sterben des neuen Charakters
 	humanoid.Died:Connect(function()
 		toggleGhostCharacter()
 	end)
@@ -657,7 +651,6 @@ game.Players.PlayerAdded:Connect(function(plr)
 	addPlayer(plr)
 end)
 
-
 for _, btn in pairs(UI["60"]:GetChildren()) do
 	if btn:IsA("TextButton") then
 		btn.MouseButton1Click:Connect(function()
@@ -672,7 +665,6 @@ for _, btn in pairs(UI["60"]:GetChildren()) do
 	end
 end
 
-
 function setHumanoid(Name, Value)
 	if Name ~= "FlightSpeed" then
 		humanoid[Name] = Value
@@ -680,7 +672,6 @@ function setHumanoid(Name, Value)
 		humanoid:SetAttribute(Name, Value)
 	end
 end
-
 
 function EnableNoClip()
 	character.HumanoidRootPart.CanCollide = false
@@ -707,7 +698,6 @@ function DisableNoClip(char)
 	end
 	isNoClip = false
 end
-
 
 function toggleNoClip()
 	if not isNoClip then
