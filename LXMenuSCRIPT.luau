@@ -1,7 +1,7 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 UI.init()
 
-
+print("r")
 --dragger
 local dragger
 local parent
