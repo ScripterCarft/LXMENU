@@ -26,16 +26,33 @@ local flying = false
 local Weld
 local torso
 
-local playerModule = player:FindFirstChild("PlayerScripts"):FindFirstChild("PlayerModule")
-if not playerModule then
-    error("PlayerModule not found")
+local playerScripts = player:FindFirstChild("PlayerScripts")
+if not playerScripts then
+    warn("PlayerScripts not found")
+    return
 end
-local controlModule = require(playerModule)
+
+local playerModule = playerScripts:FindFirstChild("PlayerModule")
+if not playerModule or not playerModule:IsA("ModuleScript") then
+    warn("PlayerModule not found or is not a ModuleScript")
+    return
+end
+
+local controlModule
+local status, err = pcall(function()
+    controlModule = require(playerModule)
+end)
+
+if not status then
+    warn("Failed to require PlayerModule:", err)
+    return
+end
+
 if not controlModule.GetControls then
-    error("GetControls method not found in PlayerModule")
+    warn("GetControls function not found in PlayerModule")
+    return
 end
-local controls = controlModule:GetControls()
-print("error")
+2. Debugging-Informa
 
 local ghostCharacter
 
