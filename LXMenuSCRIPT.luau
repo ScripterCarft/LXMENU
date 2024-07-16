@@ -1,4 +1,3 @@
-print("r")
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 UI.init()
 
