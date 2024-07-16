@@ -1,13 +1,32 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 UI.init()
-print("new")
-local dragger = UI["5"]
-local parent = dragger.Parent
+
+
+--dragger
+local dragger
+local parent
 local dragging
 local dragStart
 local userInputService = game:GetService("UserInputService")
 local startPos
 
+--player
+local runService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+local humanoid
+
+local character
+
+--flight
+local cam = game.Workspace.CurrentCamera
+local speed
+local keys = {a = false, d = false, w = false, s = false}
+local selectedPlr = nil
+local flying = false
+local Weld
+local torso
+
+local ghostCharacter
 
 local DefaultKeys = {
 	["FlightKey"] = Enum.KeyCode.X,
@@ -16,133 +35,11 @@ local DefaultKeys = {
 	
 }
 
-local Types = {
-	["KeyBinds"] = UI["119"]:Clone(),
+local MaxValues = {
+	["FlightSpeed"] = 20,
+	["WalkSpeed"] = 200,
+	["JumpHeight"] = 50
 }
-
-local cooldown = false
-
-local Settings = {
-	["Key Binds"] = {
-		["Name"] = "Key Binds",
-		["Type"] = Types.KeyBinds,
-		["Trigger"] = function(self)
-			for _, setting in pairs(self.Settings) do
-				local settingFrame = setting.Template
-				local settingBtn = settingFrame:FindFirstChildOfClass("TextButton")
-				settingBtn.MouseButton1Click:Connect(function()
-					userInputService.InputBegan:Once(function(input)
-						if input.UserInputType == Enum.UserInputType.Keyboard then
-							local isKeyUsed = false
-							for _, otherSetting in pairs(self.Settings) do
-								if otherSetting.Key == input.KeyCode then
-									isKeyUsed = true
-									break
-								end
-							end
-							if isKeyUsed or input.KeyCode == Enum.KeyCode.D or input.KeyCode == Enum.KeyCode.A or input.KeyCode == Enum.KeyCode.S or input.KeyCode == Enum.KeyCode.W then
-								warn("Dieser Key wird bereits in einer anderen Einstellung verwendet.")
-							else
-								setting.Key = input.KeyCode
-								settingFrame:FindFirstChildOfClass("TextButton"):FindFirstChildOfClass("TextLabel").Text = input.KeyCode.Name
-								cooldown = true
-								task.wait(0.1)
-								cooldown = false
-							end
-						end
-					end)
-				end)
-			end
-		end,
-		["Reset"] = function(self)
-			for _, otherSetting in pairs(self.Settings) do
-				otherSetting.Key = DefaultKeys[tostring(otherSetting.Name)]
-				otherSetting.Template:FindFirstChildOfClass("TextButton"):FindFirstChildOfClass("TextLabel").Text = DefaultKeys[tostring(otherSetting.Name)].Name
-			end
-		end,
-		["Settings"] = {
-			["FlightKey"] = {
-				["Name"] = "FlightKey",
-				["Description"] = "Change Flight State",
-				["Key"] = Enum.KeyCode.X,
-				["Custom"] = function(self)
-					return self.Key ~= DefaultKeys.FlightKey
-				end,
-				["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
-			},
-			["SafeTeleportKey"] = {
-				["Name"] = "SafeTeleportKey",
-				["Description"] = "Teleport your Character for 0.1s in Ghost",
-				["Key"] = Enum.KeyCode.N,
-				["Custom"] = function(self)
-					return self.Key ~= DefaultKeys.SafeTeleportKey
-				end,
-				["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
-			},
-			["OpenMenuKey"] = {
-				["Name"] = "OpenMenuKey",
-				["Description"] = "Open the menu with a Hotkey",
-				["Key"] = Enum.KeyCode.K,
-				["Custom"] = function(self)
-					return self.Key ~= DefaultKeys.OpenMenuKey
-				end,
-				["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
-			}
-		}
-	}
-}
-
-userInputService.InputBegan:Connect(function(input)
-	if input.KeyCode == Settings["Key Binds"].Settings.OpenMenuKey.Key and not cooldown then
-		UI["2"].Visible = not UI["2"].Visible
-	end
-end)
-
-local function update(input)
-	local delta = input.Position - dragStart
-	parent.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-dragger.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = parent.Position
-
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-dragger.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		if dragging then
-			update(input)
-		end
-	end
-end)
-
-userInputService.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		if dragging then
-			update(input)
-		end
-	end
-end)
-
-
-
-local runService = game:GetService("RunService")
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-humanoid:SetAttribute("FlightSpeed", 5)
-
-local selectedPlr = nil
-
 
 local config = {
 	["ButtonColor"] = {
@@ -151,24 +48,391 @@ local config = {
 	}
 }
 
-UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+local Types
 
-player.Character.Humanoid.Died:Connect(function()
-	local is = false
-	while not is do
+local cooldown = false
+
+local Settings
+
+function addPlayer(plr)
+	local templ = UI["76"]:Clone()
+	templ.Parent = 	UI["70"]
+	templ.DisplayName.Text = plr.DisplayName
+	templ["Polygon 1"].PlayerName.Text = "@"..plr.Name
+	templ.Picture.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" ..plr.UserId.. "&width=180&height=180&format=png"
+
+	local connection = templ.MouseButton1Click:Connect(function()
+		UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" ..plr.UserId.. "&width=180&height=180&format=png"
+		UI["5d"].Text = plr.DisplayName
+		UI["5e"].Text = plr.Name
+		selectedPlr = plr
+	end)
+
+	game.Players.PlayerRemoving:Connect(function(plr2)
+		if plr2 == plr then
+			connection:Disconnect()
+			templ:Destroy()
+			if selectedPlr  == plr2 then
+				UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .."156".. "&width=180&height=180&format=png"
+				UI["5d"].Text = "N/A"
+				UI["5e"].Text = "N/A"
+				selectedPlr = nil
+			end
+		end
+	end)
+end
+
+function initUi()
+	while ghostCharacter do
 		wait()
-		if player.Character.Humanoid.Health > 0 then
-			is = true
-			UI = UI.init()
-			initUi()
-			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-			print(UI["1"])
+	end
+	character = player.Character or player.CharacterAdded:Wait()
+	humanoid = character:WaitForChild("Humanoid")
+	humanoid:SetAttribute("FlightSpeed", 5)
+	speed = humanoid:GetAttribute("FlightSpeed")
+
+
+	dragger = UI["5"]
+	parent = dragger.Parent
+	
+	--DRAGGER
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		parent.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	dragger.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = parent.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	dragger.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			if dragging then
+				update(input)
+			end
+		end
+	end)
+
+	userInputService.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			if dragging then
+				update(input)
+			end
+		end
+	end)
+	
+	
+	--inits
+	
+	
+	Types = {
+		["KeyBinds"] = UI["119"]:Clone(),
+	}
+
+	Settings = {
+		["Key Binds"] = {
+			["Name"] = "Key Binds",
+			["Type"] = Types.KeyBinds,
+			["Trigger"] = function(self)
+				for _, setting in pairs(self.Settings) do
+					local settingFrame = setting.Template
+					local settingBtn = settingFrame:FindFirstChildOfClass("TextButton")
+					settingBtn.MouseButton1Click:Connect(function()
+						userInputService.InputBegan:Once(function(input)
+							if input.UserInputType == Enum.UserInputType.Keyboard then
+								local isKeyUsed = false
+								for _, otherSetting in pairs(self.Settings) do
+									if otherSetting.Key == input.KeyCode then
+										isKeyUsed = true
+										break
+									end
+								end
+								if isKeyUsed or input.KeyCode == Enum.KeyCode.D or input.KeyCode == Enum.KeyCode.A or input.KeyCode == Enum.KeyCode.S or input.KeyCode == Enum.KeyCode.W then
+									warn("Dieser Key wird bereits in einer anderen Einstellung verwendet.")
+								else
+									setting.Key = input.KeyCode
+									settingFrame:FindFirstChildOfClass("TextButton"):FindFirstChildOfClass("TextLabel").Text = input.KeyCode.Name
+									cooldown = true
+									task.wait(0.1)
+									cooldown = false
+								end
+							end
+						end)
+					end)
+				end
+			end,
+			["Reset"] = function(self)
+				for _, otherSetting in pairs(self.Settings) do
+					otherSetting.Key = DefaultKeys[tostring(otherSetting.Name)]
+					otherSetting.Template:FindFirstChildOfClass("TextButton"):FindFirstChildOfClass("TextLabel").Text = DefaultKeys[tostring(otherSetting.Name)].Name
+				end
+			end,
+			["Settings"] = {
+				["FlightKey"] = {
+					["Name"] = "FlightKey",
+					["Description"] = "Change Flight State",
+					["Key"] = Enum.KeyCode.X,
+					["Custom"] = function(self)
+						return self.Key ~= DefaultKeys.FlightKey
+					end,
+					["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
+				},
+				["SafeTeleportKey"] = {
+					["Name"] = "SafeTeleportKey",
+					["Description"] = "Teleport your Character for 0.1s in Ghost",
+					["Key"] = Enum.KeyCode.N,
+					["Custom"] = function(self)
+						return self.Key ~= DefaultKeys.SafeTeleportKey
+					end,
+					["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
+				},
+				["OpenMenuKey"] = {
+					["Name"] = "OpenMenuKey",
+					["Description"] = "Open the menu with a Hotkey",
+					["Key"] = Enum.KeyCode.K,
+					["Custom"] = function(self)
+						return self.Key ~= DefaultKeys.OpenMenuKey
+					end,
+					["Template"] = Types.KeyBinds.Container.Settings.Setting:Clone(),
+				}
+			}
+		}
+	}
+	
+	
+	local SettingTypes = {
+		["Switch"] = UI[""]
+	}
+	
+	
+	
+	
+	
+	for _, setting in pairs(Settings) do
+		local Template = setting.Type
+		Template.Container.TopBar.Title.Text = setting.Name
+		Template.Parent = UI["114"]
+
+		Template.Container.TopBar.Reset.MouseButton1Click:Connect(function()
+			setting:Reset()
+		end)
+
+		setting:Trigger()
+		local TemplSetting = Template.Container.Settings.Setting
+
+		for _, sting in pairs(Template.Container.Settings:GetChildren()) do
+			if sting:IsA("Frame") then
+				sting:Destroy()
+			end
+		end
+
+		for _, setting2 in pairs(setting.Settings) do
+			local Template2 = setting2.Template
+			Template2.Parent = Template.Container.Settings
+			Template2["Frame 13"].SettingName.Text = setting2.Description
+			Template2["KeySelection"].Key.Text = setting2.Key.Name
 		end
 	end
+
+
+	for _, settingSection in pairs(UI["114"]:GetChildren()) do
+		if settingSection:IsA("Frame") and settingSection.Name ~= "Z" then
+			settingSection.Container.TopBar.Drop.Rotation = 270
+			settingSection.Container.TopBar.Drop.MouseButton1Click:Connect(function()
+				if settingSection.AutomaticSize == Enum.AutomaticSize.None then
+					settingSection.AutomaticSize = Enum.AutomaticSize.Y
+					settingSection.Container.TopBar.Drop.Rotation = 0
+				else
+					settingSection.AutomaticSize = Enum.AutomaticSize.None
+					settingSection.Container.TopBar.Drop.Rotation = 270
+				end
+			end)
+		end
+	end
+	
+	--BAR
+	
+	
+	local function updateCharacterMod(slider)
+		if game.Players.LocalPlayer.Character then
+			local character = game.Players.LocalPlayer.Character
+			local humanoid = character:FindFirstChild("Humanoid")
+			if humanoid then
+				local Name = slider:FindFirstChildOfClass("NumberValue").Name
+				local Value = MaxValues[slider:FindFirstChildOfClass("NumberValue").Name]
+				if Name ~= "FlightSpeed" then
+					humanoid[Name] = Value * slider.Size.X.Scale
+				else
+					humanoid:SetAttribute(Name, Value * slider.Size.X.Scale)
+				end
+			end
+		end
+	end
+	
+	
+	local function setSlider(slider)
+		local current
+		if slider:FindFirstChildOfClass("NumberValue").Name ~= "FlightSpeed" then
+			current = humanoid[slider:FindFirstChildOfClass("NumberValue").Name]
+		else
+			current = humanoid:GetAttribute(slider:FindFirstChildOfClass("NumberValue").Name)
+		end
+		local max = MaxValues[slider:FindFirstChildOfClass("NumberValue").Name]
+		local percentage = current / max
+		slider.Size = UDim2.new(percentage, 0, 1, 0)
+		updateCharacterMod(slider)
+	end
+
+
+	local function updateTextBoxVal(slider)
+		if slider.Parent.Parent:FindFirstChild("Frame TextButton"):FindFirstChild("x1i") then
+			slider.Parent.Parent["Frame TextButton"]["x1i"].Text =  math.round(MaxValues[slider:FindFirstChildOfClass("NumberValue").Name] * slider.Size.X.Scale)
+		end
+	end
+	
+	
+	local function createDraggableSliderForEachFrame()
+		for _, slider in pairs(UI["1"]:GetDescendants()) do
+			if slider.Name == "Frame 1" and slider:IsA("Frame") then
+				local parentFrame = slider.Parent
+				local dragging = false
+				local dragStart, initialScale
+
+				parentFrame.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						dragging = true
+						dragStart = input.Position
+						initialScale = slider.Size
+
+						local mouse = game.Players.LocalPlayer:GetMouse()
+						local relativeX = (mouse.X - parentFrame.AbsolutePosition.X) / parentFrame.AbsoluteSize.X
+						relativeX = math.clamp(relativeX, 0, 1)
+						slider.Size = UDim2.new(relativeX, 0, initialScale.Y.Scale, 0)
+						updateTextBoxVal(slider)
+						updateCharacterMod(slider)
+					end
+				end)
+
+				userInputService.InputChanged:Connect(function(input)
+					if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+						local mouse = game.Players.LocalPlayer:GetMouse()
+						local relativeX = (mouse.X - parentFrame.AbsolutePosition.X) / parentFrame.AbsoluteSize.X
+						relativeX = math.clamp(relativeX, 0, 1)
+						slider.Size = UDim2.new(relativeX, 0, initialScale.Y.Scale, 0)
+						updateTextBoxVal(slider)
+						updateCharacterMod(slider)
+					end
+				end)
+
+				parentFrame.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						dragging = false
+					end
+				end)
+			end
+		end
+	end
+
+	createDraggableSliderForEachFrame()
+
+	
+	for _, value in pairs(UI["10"]:GetDescendants())  do
+		if value:IsA("NumberValue") then
+			if value.Name ~= "FlightSpeed" then
+				value.Value = humanoid[value.Name]
+			else
+				value.Value = humanoid:GetAttribute(value.Name)
+			end
+		end
+		if value.Name == "Frame 1" then
+			setSlider(value)
+			updateTextBoxVal(value)
+		end
+		if value.Name == "x1i" then
+			value.FocusLost:Connect(function()
+				value.Text = value.Text:gsub("[^0-9.]", "")
+				if value.Text == "" then
+					value.Text = value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"):FindFirstChildOfClass("NumberValue").Value
+				end
+				setHumanoid(value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"):FindFirstChildOfClass("NumberValue").Name, value.Text)
+				setSlider(value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"))
+			end)
+		end
+	end
+	
+	for _, btn in pairs(UI["3f"]:GetChildren()) do
+		if btn:IsA("TextButton") then
+			btn.MouseButton1Click:Connect(function()
+				if btn["Frame 3"].ImageColor3 == config.ButtonColor.On then
+					btn["Frame 3"].ImageColor3 = Color3.new(1, 1, 1)
+				else
+					btn["Frame 3"].ImageColor3 = config.ButtonColor.On
+				end
+				if btn.Name == "1" then
+					flying = not flying
+					if flying then start() end
+				elseif btn.Name == "2" then
+					toggleNoClip()
+				elseif btn.Name == "3" then
+					healPlayer()
+				elseif btn.Name == "4" then
+					toggleGhostCharacter()
+				end
+			end)
+		end
+	end
+	
+	
+	for _, plr in pairs(game.Players:GetChildren()) do
+		if plr ~= player then
+			addPlayer(plr)
+		end
+	end
+	
+	
+	for _, btn in pairs(UI["60"]:GetChildren()) do
+		if btn:IsA("TextButton") then
+			btn.MouseButton1Click:Connect(function()
+				if selectedPlr then
+					if btn.Name == "2" then
+						teleportToPlayer(player, selectedPlr)
+					elseif btn.Name == "1" then
+						changeCameraSubject()
+					end
+				end
+			end)
+		end
+	end
+
+	
+end
+print("LOADED1")
+
+initUi()
+
+print("LOADED2")
+
+local toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
+
+
+UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+userInputService.InputBegan:Connect(function(input)
+	if input.KeyCode == Settings["Key Binds"].Settings.OpenMenuKey.Key and not cooldown then
+		UI["2"].Visible = not UI["2"].Visible
+	end
 end)
-
-local Weld
-
 
 function addCore()
 	if workspace:FindFirstChild("Core") then
@@ -189,20 +453,29 @@ function addCore()
 	end)
 
 	workspace:WaitForChild("Core")
+	torso = workspace.Core
 end
+
+player.Character.Humanoid.Died:Connect(function()
+	flying = false
+	local is = false
+	while not is do
+		wait()
+		if player.Character.Humanoid.Health > 0 then
+			is = true
+			UI = UI.init()
+			initUi()
+			addCore()
+			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+		end
+	end
+end)
 
 addCore()
 
+torso = workspace.Core
 
-local cam = game.Workspace.CurrentCamera
-
-local torso = workspace.Core
-local flying = false
-local speed = humanoid:GetAttribute("FlightSpeed")
-local toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
-local keys = {a = false, d = false, w = false, s = false}
-
-local function start()
+function start()
 	local pos = Instance.new("BodyPosition", torso)
 	local gyro = Instance.new("BodyGyro", torso)
 	pos.maxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -231,14 +504,6 @@ local function start()
 	flying = false
 	character.Humanoid.PlatformStand = false
 end
-
-
-
-local MaxValues = {
-	["FlightSpeed"] = 20,
-	["WalkSpeed"] = 200,
-	["JumpHeight"] = 50
-}
 
 
 
@@ -271,7 +536,6 @@ function healPlayer()
 end
 
 local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
-local ghostCharacter
 local isNoClip = false
 
 local function createGhostCharacter()
@@ -323,7 +587,7 @@ local function createGhostCharacter()
 	return clone
 end
 
-function shortTpPlayer(character, char)
+local function shortTpPlayer(character, char)
 	cooldown = true
 	local start = character.HumanoidRootPart.CFrame
 	character.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame
@@ -425,42 +689,6 @@ function toggleGhostCharacter()
 	end
 end
 
-
-
-function addPlayer(plr)
-	local templ = UI["76"]:Clone()
-	templ.Parent = 	UI["70"]
-	templ.DisplayName.Text = plr.DisplayName
-	templ["Polygon 1"].PlayerName.Text = "@"..plr.Name
-	templ.Picture.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" ..plr.UserId.. "&width=180&height=180&format=png"
-
-	local connection = templ.MouseButton1Click:Connect(function()
-		UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" ..plr.UserId.. "&width=180&height=180&format=png"
-		UI["5d"].Text = plr.DisplayName
-		UI["5e"].Text = plr.Name
-		selectedPlr = plr
-	end)
-
-	game.Players.PlayerRemoving:Connect(function(plr2)
-		if plr2 == plr then
-			connection:Disconnect()
-			templ:Destroy()
-			if selectedPlr  == plr2 then
-				UI["59"].Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .."156".. "&width=180&height=180&format=png"
-				UI["5d"].Text = "N/A"
-				UI["5e"].Text = "N/A"
-				selectedPlr = nil
-			end
-		end
-	end)
-end
-
-for _, plr in pairs(game.Players:GetChildren()) do
-	if plr ~= player then
-		addPlayer(plr)
-	end
-end
-
 game.Players.PlayerAdded:Connect(function(plr)
 	addPlayer(plr)
 end)
@@ -480,65 +708,6 @@ for _, btn in pairs(UI["60"]:GetChildren()) do
 	end
 end
 
-for _, setting in pairs(Settings) do
-	local Template = setting.Type
-	Template.Container.TopBar.Title.Text = setting.Name
-	Template.Parent = UI["114"]
-
-	Template.Container.TopBar.Reset.MouseButton1Click:Connect(function()
-		setting:Reset()
-	end)
-
-	setting:Trigger()
-	local TemplSetting = Template.Container.Settings.Setting
-	
-	for _, sting in pairs(Template.Container.Settings:GetChildren()) do
-		if sting:IsA("Frame") then
-			sting:Destroy()
-		end
-	end
-
-	for _, setting2 in pairs(setting.Settings) do
-		local Template2 = setting2.Template
-		Template2.Parent = Template.Container.Settings
-		Template2["Frame 13"].SettingName.Text = setting2.Description
-		Template2["KeySelection"].Key.Text = setting2.Key.Name
-	end
-end
-
-
-for _, settingSection in pairs(UI["114"]:GetChildren()) do
-	if settingSection:IsA("Frame") and settingSection.Name ~= "Z" then
-		settingSection.Container.TopBar.Drop.Rotation = 270
-		settingSection.Container.TopBar.Drop.MouseButton1Click:Connect(function()
-			if settingSection.AutomaticSize == Enum.AutomaticSize.None then
-				settingSection.AutomaticSize = Enum.AutomaticSize.Y
-				settingSection.Container.TopBar.Drop.Rotation = 0
-			else
-				settingSection.AutomaticSize = Enum.AutomaticSize.None
-				settingSection.Container.TopBar.Drop.Rotation = 270
-			end
-		end)
-	end
-end
-
-
-function updateCharacterMod(slider)
-	if game.Players.LocalPlayer.Character then
-		local character = game.Players.LocalPlayer.Character
-		local humanoid = character:FindFirstChild("Humanoid")
-		if humanoid then
-			local Name = slider:FindFirstChildOfClass("NumberValue").Name
-			local Value = MaxValues[slider:FindFirstChildOfClass("NumberValue").Name]
-			if Name ~= "FlightSpeed" then
-				humanoid[Name] = Value * slider.Size.X.Scale
-			else
-				humanoid:SetAttribute(Name, Value * slider.Size.X.Scale)
-			end
-		end
-	end
-end
-
 
 function setHumanoid(Name, Value)
 	if Name ~= "FlightSpeed" then
@@ -547,98 +716,6 @@ function setHumanoid(Name, Value)
 		humanoid:SetAttribute(Name, Value)
 	end
 end
-
-
-
-function setSlider(slider)
-	local current
-	if slider:FindFirstChildOfClass("NumberValue").Name ~= "FlightSpeed" then
-		current = humanoid[slider:FindFirstChildOfClass("NumberValue").Name]
-	else
-		current = humanoid:GetAttribute(slider:FindFirstChildOfClass("NumberValue").Name)
-	end
-	local max = MaxValues[slider:FindFirstChildOfClass("NumberValue").Name]
-	local percentage = current / max
-	slider.Size = UDim2.new(percentage, 0, 1, 0)
-	updateCharacterMod(slider)
-end
-
-
-function updateTextBoxVal(slider)
-	if slider.Parent.Parent:FindFirstChild("Frame TextButton"):FindFirstChild("x1i") then
-		slider.Parent.Parent["Frame TextButton"]["x1i"].Text =  math.round(MaxValues[slider:FindFirstChildOfClass("NumberValue").Name] * slider.Size.X.Scale)
-	end
-end
-
-
-for _, value in pairs(UI["10"]:GetDescendants())  do
-	if value:IsA("NumberValue") then
-		if value.Name ~= "FlightSpeed" then
-			value.Value = humanoid[value.Name]
-		else
-			value.Value = humanoid:GetAttribute(value.Name)
-		end
-	end
-	if value.Name == "Frame 1" then
-		setSlider(value)
-		updateTextBoxVal(value)
-	end
-	if value.Name == "x1i" then
-		value.FocusLost:Connect(function()
-			value.Text = value.Text:gsub("[^0-9.]", "")
-			if value.Text == "" then
-				value.Text = value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"):FindFirstChildOfClass("NumberValue").Value
-			end
-			setHumanoid(value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"):FindFirstChildOfClass("NumberValue").Name, value.Text)
-			setSlider(value.Parent.Parent:FindFirstChild("Bar"):FindFirstChild("Frame 1"))
-		end)
-	end
-end
-
-
-function createDraggableSliderForEachFrame()
-	for _, slider in pairs(UI["1"]:GetDescendants()) do
-		if slider.Name == "Frame 1" and slider:IsA("Frame") then
-			local parentFrame = slider.Parent
-			local dragging = false
-			local dragStart, initialScale
-
-			parentFrame.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					dragging = true
-					dragStart = input.Position
-					initialScale = slider.Size
-
-					local mouse = game.Players.LocalPlayer:GetMouse()
-					local relativeX = (mouse.X - parentFrame.AbsolutePosition.X) / parentFrame.AbsoluteSize.X
-					relativeX = math.clamp(relativeX, 0, 1)
-					slider.Size = UDim2.new(relativeX, 0, initialScale.Y.Scale, 0)
-					updateTextBoxVal(slider)
-					updateCharacterMod(slider)
-				end
-			end)
-
-			userInputService.InputChanged:Connect(function(input)
-				if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-					local mouse = game.Players.LocalPlayer:GetMouse()
-					local relativeX = (mouse.X - parentFrame.AbsolutePosition.X) / parentFrame.AbsoluteSize.X
-					relativeX = math.clamp(relativeX, 0, 1)
-					slider.Size = UDim2.new(relativeX, 0, initialScale.Y.Scale, 0)
-					updateTextBoxVal(slider)
-					updateCharacterMod(slider)
-				end
-			end)
-
-			parentFrame.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					dragging = false
-				end
-			end)
-		end
-	end
-end
-
-createDraggableSliderForEachFrame()
 
 
 function EnableNoClip()
@@ -676,34 +753,12 @@ function toggleNoClip()
 	end
 end
 
-
-for _, btn in pairs(UI["3f"]:GetChildren()) do
-	if btn:IsA("TextButton") then
-		btn.MouseButton1Click:Connect(function()
-			if btn["Frame 3"].ImageColor3 == config.ButtonColor.On then
-				btn["Frame 3"].ImageColor3 = Color3.new(1, 1, 1)
-			else
-				btn["Frame 3"].ImageColor3 = config.ButtonColor.On
-			end
-			if btn.Name == "1" then
-				flying = not flying
-				if flying then start() end
-			elseif btn.Name == "2" then
-				toggleNoClip()
-			elseif btn.Name == "3" then
-				healPlayer()
-			elseif btn.Name == "4" then
-				toggleGhostCharacter()
-			end
-		end)
-	end
-end
-
 player:GetMouse().KeyDown:connect(function(key)
 	if not torso or not torso.Parent then
 		flying = false
 		return
 	end
+	
 	toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
 	if key == toggleKey.Name:lower() then
 		flying = not flying
