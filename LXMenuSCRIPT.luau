@@ -532,6 +532,7 @@ function healPlayer()
 	character.Humanoid.Health = character.Humanoid.MaxHealth
 end
 
+task.wait(1)
 local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
 local isNoClip = false
 
