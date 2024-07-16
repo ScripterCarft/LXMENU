@@ -26,7 +26,15 @@ local flying = false
 local Weld
 local torso
 
-local controlModule = require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+local playerModule = player:FindFirstChild("PlayerScripts"):FindFirstChild("PlayerModule")
+if not playerModule then
+    error("PlayerModule not found")
+end
+local controlModule = require(playerModule)
+if not controlModule.GetControls then
+    error("GetControls method not found in PlayerModule")
+end
+local controls = controlModule:GetControls()
 print("error")
 
 local ghostCharacter
