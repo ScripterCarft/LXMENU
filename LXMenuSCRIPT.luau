@@ -417,11 +417,8 @@ function initUi()
 
 	
 end
-print("LOADED1")
 
 initUi()
-
-print("LOADED2")
 
 local toggleKey = Settings["Key Binds"].Settings.FlightKey.Key
 
