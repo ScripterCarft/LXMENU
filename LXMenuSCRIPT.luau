@@ -213,6 +213,12 @@ function initUi()
 	}
 	
 	
+	local SettingTypes = {
+		["Switch"] = UI[""]
+	}
+	
+	
+	
 	
 	
 	for _, setting in pairs(Settings) do
@@ -460,7 +466,6 @@ player.Character.Humanoid.Died:Connect(function()
 			initUi()
 			addCore()
 			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-			print(UI["1"])
 		end
 	end
 end)
@@ -470,7 +475,6 @@ addCore()
 torso = workspace.Core
 
 function start()
-	print("sti")
 	local pos = Instance.new("BodyPosition", torso)
 	local gyro = Instance.new("BodyGyro", torso)
 	pos.maxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -480,7 +484,6 @@ function start()
 	UI["3f"]["1"]["Frame 3"].ImageColor3 = config.ButtonColor.On
 	repeat
 		wait()
-		print("du")
 		speed = humanoid:GetAttribute("FlightSpeed")
 		character.Humanoid.PlatformStand = true
 		EnableNoClip()
