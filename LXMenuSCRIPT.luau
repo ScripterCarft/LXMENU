@@ -17,7 +17,11 @@ local player = game.Players.LocalPlayer
 local humanoid
 
 local success, result = pcall(function()
-	return require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+	if player:FindFirstChild("PlayerScripts"):FindFirstChild("PlayerModule") then
+		return require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+	else
+		return nil
+	end
 end)
 
 local character
