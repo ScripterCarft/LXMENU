@@ -454,7 +454,11 @@ function addCore()
 		Core.Parent = workspace
 		Weld = Instance.new("Weld", Core)
 		Weld.Part0 = Core
-		Weld.Part1 = character.LowerTorso
+		if character:FindFirstChild("LowerTorso") then
+			Weld.Part1 = character.LowerTorso
+		else
+			Weld.Part1 = character.Torso
+		end
 		Weld.C0 = CFrame.new(0, 0, 0)
 	end)
 
