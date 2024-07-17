@@ -478,22 +478,20 @@ function addCore()
 	torso = workspace.Core
 end
 
-function changeCameraSubject(SubjectCharacter)
-	cam.CameraType = Enum.CameraType.Custom
-	if SubjectCharacter then
-		cam.CameraSubject = SubjectCharacter.Humanoid
-	else
-		if selectedPlr then
-			if cam.CameraSubject == selectedPlr.Character.Humanoid then
-				cam.CameraSubject = player.Character.Humanoid
-			else	
-				cam.CameraSubject = selectedPlr.Character.Humanoid
-			end
-		else
-			cam.CameraSubject = player.Character.Humanoid
+player.Character.Humanoid.Died:Connect(function()
+	flying = false
+	local is = false
+	while not is do
+		wait()
+		if player.Character.Humanoid.Health > 0 then
+			is = true
+			UI = UI.init()
+			initUi()
+			addCore()
+			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 		end
 	end
-end
+end)
 
 addCore()
 
@@ -552,10 +550,14 @@ function changeCameraSubject(SubjectCharacter)
 	if SubjectCharacter then
 		cam.CameraSubject = SubjectCharacter.Humanoid
 	else
-		if cam.CameraSubject == selectedPlr.Character.Humanoid then
+		if selectedPlr then
+			if cam.CameraSubject == selectedPlr.Character.Humanoid then
+				cam.CameraSubject = player.Character.Humanoid
+			else	
+				cam.CameraSubject = selectedPlr.Character.Humanoid
+			end
+		else
 			cam.CameraSubject = player.Character.Humanoid
-		else	
-			cam.CameraSubject = selectedPlr.Character.Humanoid
 		end
 	end
 end
@@ -647,13 +649,17 @@ end
 
 EnableMovement()
 
+local connection
+
 function toggleGhostCharacter()
 	print(ghostCharacter)
 	if ghostCharacter then
+		connection:Disconnect()
 		if player.Character.PrimaryPart then
 			player.Character:SetPrimaryPartCFrame(ghostCharacter.HumanoidRootPart.CFrame)
 			ghostCharacter:Destroy()
 			ghostCharacter = nil
+			print("JET")
 			changeCameraSubject(player.Character)
 			character = player.Character
 			Weld.Part1 = getTorso()
@@ -685,6 +691,8 @@ function toggleGhostCharacter()
 	DisableMovement()
 
 	local function onRenderStep()
+		print("YOUR")
+		changeCameraSubject(ghostCharacter)
 		local moveDirection = Vector3.new()
 		if userInputService:IsKeyDown(Enum.KeyCode.W) then
 			moveDirection = moveDirection + cam.CFrame.LookVector
@@ -710,8 +718,6 @@ function toggleGhostCharacter()
 		else
 			humanoid:Move(Vector3.new(0, 0, 0), false) -- Stoppt die Bewegung
 		end
-		
-		changeCameraSubject(ghostCharacter)
 	end
 
 	userInputService.InputBegan:Connect(function(input)
@@ -721,7 +727,7 @@ function toggleGhostCharacter()
 	end)
 
 	-- Verbindung zu RenderStep herstellen
-	runService.RenderStepped:Connect(onRenderStep)
+	connection = runService.RenderStepped:Connect(onRenderStep)
 
 	-- Behandle das Sterben des neuen Charakters
 	humanoid.Died:Connect(function()
