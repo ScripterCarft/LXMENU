@@ -508,7 +508,6 @@ function start()
 	repeat
 		wait()
 		speed = humanoid:GetAttribute("FlightSpeed")
-		character.Humanoid.PlatformStand = true
 		EnableNoClip()
 		local new = gyro.cframe - gyro.cframe.p + pos.position
 		local direction = workspace.CurrentCamera.CoordinateFrame.lookVector
@@ -524,7 +523,6 @@ function start()
 	if gyro then gyro:Destroy() end
 	if pos then pos:Destroy() end
 	flying = false
-	character.Humanoid.PlatformStand = false
 end
 
 
