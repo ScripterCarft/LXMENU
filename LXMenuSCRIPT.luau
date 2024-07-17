@@ -478,20 +478,22 @@ function addCore()
 	torso = workspace.Core
 end
 
-player.Character.Humanoid.Died:Connect(function()
-	flying = false
-	local is = false
-	while not is do
-		wait()
-		if player.Character.Humanoid.Health > 0 then
-			is = true
-			UI = UI.init()
-			initUi()
-			addCore()
-			UI["1"].Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+function changeCameraSubject(SubjectCharacter)
+	cam.CameraType = Enum.CameraType.Custom
+	if SubjectCharacter then
+		cam.CameraSubject = SubjectCharacter.Humanoid
+	else
+		if selectedPlr then
+			if cam.CameraSubject == selectedPlr.Character.Humanoid then
+				cam.CameraSubject = player.Character.Humanoid
+			else	
+				cam.CameraSubject = selectedPlr.Character.Humanoid
+			end
+		else
+			cam.CameraSubject = player.Character.Humanoid
 		end
 	end
-end)
+end
 
 addCore()
 
