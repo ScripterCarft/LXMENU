@@ -518,17 +518,15 @@ function teleportToPlayer(player, player2)
 end
 
 function changeCameraSubject(SubjectCharacter)
-	if not SubjectCharacter then
+	cam.CameraType = Enum.CameraType.Custom
+	if SubjectCharacter then
+		cam.CameraSubject = SubjectCharacter.Humanoid
+	else
 		if cam.CameraSubject == selectedPlr.Character.Humanoid then
 			cam.CameraSubject = player.Character.Humanoid
-			cam.CameraType = Enum.CameraType.Custom
-		else
+		else	
 			cam.CameraSubject = selectedPlr.Character.Humanoid
-			cam.CameraType = Enum.CameraType.Custom
 		end
-	else
-		cam.CameraSubject = SubjectCharacter.Humanoid
-		cam.CameraType = Enum.CameraType.Custom
 	end
 end
 
@@ -682,6 +680,8 @@ function toggleGhostCharacter()
 		else
 			humanoid:Move(Vector3.new(0, 0, 0), false) -- Stoppt die Bewegung
 		end
+		
+		changeCameraSubject(ghostCharacter)
 	end
 
 	userInputService.InputBegan:Connect(function(input)
@@ -702,8 +702,6 @@ function toggleGhostCharacter()
 		toggleGhostCharacter()
 	end)
 
-	changeCameraSubject(ghostCharacter)
-
 	if wasflying then
 		flying = true
 		start()
@@ -713,21 +711,6 @@ end
 game.Players.PlayerAdded:Connect(function(plr)
 	addPlayer(plr)
 end)
-
-
-for _, btn in pairs(UI["60"]:GetChildren()) do
-	if btn:IsA("TextButton") then
-		btn.MouseButton1Click:Connect(function()
-			if selectedPlr then
-				if btn.Name == "2" then
-					teleportToPlayer(player, selectedPlr)
-				elseif btn.Name == "1" then
-					changeCameraSubject()
-				end
-			end
-		end)
-	end
-end
 
 
 function setHumanoid(Name, Value)
