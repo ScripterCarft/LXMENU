@@ -1,8 +1,5 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 
-
-local UI = require(game.ReplicatedStorage.UI)
-
 UI.init()
 
 
