@@ -1,4 +1,6 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
+
+local UI = require(game.ReplicatedStorage.UI)
+
 UI.init()
 
 
@@ -15,6 +17,10 @@ local runService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
 local humanoid
 
+local success, result = pcall(function()
+	return require(player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+end)
+
 local character
 
 --flight
@@ -25,34 +31,6 @@ local selectedPlr = nil
 local flying = false
 local Weld
 local torso
-
-local playerScripts = player:FindFirstChild("PlayerScripts")
-if not playerScripts then
-    warn("PlayerScripts not found")
-    return
-end
-
-local playerModule = playerScripts:FindFirstChild("PlayerModule")
-if not playerModule or not playerModule:IsA("ModuleScript") then
-    warn("PlayerModule not found or is not a ModuleScript")
-    return
-end
-
-local controlModule
-local status, err = pcall(function()
-    controlModule = require(playerModule)
-end)
-
-if not status then
-    warn("Failed to require PlayerModule:", err)
-    return
-end
-
-if not controlModule.GetControls then
-    warn("GetControls function not found in PlayerModule")
-    return
-end
-2. Debugging-Informa
 
 local ghostCharacter
 
@@ -560,6 +538,7 @@ function healPlayer()
 	character.Humanoid.Health = character.Humanoid.MaxHealth
 end
 
+
 local isNoClip = false
 
 local function createGhostCharacter()
@@ -620,7 +599,26 @@ local function shortTpPlayer(character, char)
 	cooldown = false
 end
 
-controlModule:Enable()
+local WalkSpeedalt = 16
+
+local function DisableMovement()
+	if success and result then
+		result:Disable()
+	else
+		WalkSpeedalt = player.Character.Humanoid.WalkSpeed
+		player.Character.Humanoid.WalkSpeed = 0
+	end
+end
+
+local function EnableMovement()
+	if success and result then
+		result:Enable()
+	else
+		player.Character.Humanoid.WalkSpeed = WalkSpeedalt
+	end
+end
+
+EnableMovement()
 
 function toggleGhostCharacter()
 	print(ghostCharacter)
@@ -635,7 +633,7 @@ function toggleGhostCharacter()
 			if isNoClip then
 				EnableNoClip()
 			end
-			controlModule:Enable()
+			EnableMovement()
 		else
 			ghostCharacter:Destroy()
 			ghostCharacter = nil
@@ -657,7 +655,7 @@ function toggleGhostCharacter()
 	end
 
 	local humanoid = ghostCharacter:FindFirstChildWhichIsA("Humanoid")
-	controlModule:Disable()
+	DisableMovement()
 
 	local function onRenderStep()
 		local moveDirection = Vector3.new()
