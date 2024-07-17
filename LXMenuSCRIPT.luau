@@ -1,5 +1,8 @@
 local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ScripterCarft/LXMENU/main/LXMenuUI.luau"))()
 
+
+local UI = require(game.ReplicatedStorage.UI)
+
 UI.init()
 
 
@@ -440,6 +443,14 @@ userInputService.InputBegan:Connect(function(input)
 	end
 end)
 
+local function getTorso()
+	if character:FindFirstChild("LowerTorso") then
+		return character.LowerTorso
+	else
+		return character.Torso
+	end
+end
+
 function addCore()
 	if workspace:FindFirstChild("Core") then
 		workspace.Core:Destroy()
@@ -454,11 +465,8 @@ function addCore()
 		Core.Parent = workspace
 		Weld = Instance.new("Weld", Core)
 		Weld.Part0 = Core
-		if character:FindFirstChild("LowerTorso") then
-			Weld.Part1 = character.LowerTorso
-		else
-			Weld.Part1 = character.Torso
-		end
+		Weld.Part1 = getTorso()
+
 		Weld.C0 = CFrame.new(0, 0, 0)
 	end)
 
@@ -634,7 +642,7 @@ function toggleGhostCharacter()
 			ghostCharacter = nil
 			changeCameraSubject(player.Character)
 			character = player.Character
-			Weld.Part1 = character.LowerTorso
+			Weld.Part1 = getTorso()
 			if isNoClip then
 				EnableNoClip()
 			end
@@ -653,7 +661,7 @@ function toggleGhostCharacter()
 	end
 	ghostCharacter = createGhostCharacter()
 	character = ghostCharacter
-	Weld.Part1 = character.LowerTorso
+	Weld.Part1 = getTorso()
 
 	if isNoClip then
 		EnableNoClip()
@@ -732,7 +740,7 @@ end
 
 function EnableNoClip()
 	character.HumanoidRootPart.CanCollide = false
-	character.LowerTorso.CanCollide = false
+	getTorso().CanCollide = false
 	character.UpperTorso.CanCollide = false
 	isNoClip = true
 end
@@ -746,11 +754,11 @@ end)
 function DisableNoClip(char)
 	if char then
 		char.HumanoidRootPart.CanCollide = true
-		char.LowerTorso.CanCollide = true
+		getTorso().CanCollide = true
 		char.UpperTorso.CanCollide = true
 	else
 		character.HumanoidRootPart.CanCollide = true
-		character.LowerTorso.CanCollide = true
+		getTorso().CanCollide = true
 		character.UpperTorso.CanCollide = true
 	end
 	isNoClip = false
