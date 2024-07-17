@@ -440,7 +440,14 @@ userInputService.InputBegan:Connect(function(input)
 	end
 end)
 
-local function getTorso()
+local function getTorso(char)
+	if char then
+		if char:FindFirstChild("LowerTorso") then
+			return char.LowerTorso
+		else
+			return char.Torso
+		end
+	end
 	if character:FindFirstChild("LowerTorso") then
 		return character.LowerTorso
 	else
@@ -521,12 +528,20 @@ function start()
 end
 
 
+local function getUpperTorso(char)
+	if character:FindFirstChild("UpperTorso") then
+		return char.UpperTorso
+	else
+		return char.Torso
+	end
+end
+
 
 function teleportToPlayer(player, player2)
 	if player2.Character.HumanoidRootPart then
 		character.HumanoidRootPart.CFrame = player2.Character.HumanoidRootPart.CFrame 
 	else
-		character.HumanoidRootPart.CFrame = player2.Character.UpperTorso.CFrame 
+		character.HumanoidRootPart.CFrame = getUpperTorso(player2.Character).CFrame 
 	end
 end
 
@@ -738,7 +753,7 @@ end
 function EnableNoClip()
 	character.HumanoidRootPart.CanCollide = false
 	getTorso().CanCollide = false
-	character.UpperTorso.CanCollide = false
+	getUpperTorso(character).CanCollide = false
 	isNoClip = true
 end
 
@@ -751,12 +766,12 @@ end)
 function DisableNoClip(char)
 	if char then
 		char.HumanoidRootPart.CanCollide = true
-		getTorso().CanCollide = true
-		char.UpperTorso.CanCollide = true
+		getTorso(char).CanCollide = true
+		getUpperTorso(char).CanCollide = true
 	else
 		character.HumanoidRootPart.CanCollide = true
 		getTorso().CanCollide = true
-		character.UpperTorso.CanCollide = true
+		getUpperTorso(character).CanCollide = true
 	end
 	isNoClip = false
 end
